@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OmniUpdate</title>
+<link rel="icon" href="/icon.png">
+<style>
+:root{
+  --bg:#f5f6fb; --card:#ffffff; --line:#e4e7f1; --text:#0f172a; --muted:#64748b; --soft:#eef0f8;
+  --accent:#4f46e5; --accent-2:#14b8a6; --accent-ink:#ffffff;
+  --ok:#15803d; --okbg:#e8f6ee; --warn:#b45309; --warnbg:#fdf1e0; --bad:#b91c1c; --badbg:#fde9e9;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 8px 24px rgba(15,23,42,.06);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0b1020; --card:#131a2e; --line:#232c47; --text:#e7ebf7; --muted:#93a0bd; --soft:#1a2340;
+  --accent:#8b86ff; --accent-ink:#0b1020; --ok:#4ade80; --okbg:#10291c; --warn:#fbbf24; --warnbg:#2c2210; --bad:#f87171; --badbg:#2d1416;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:14px/1.45 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:1040px;margin:0 auto;padding:22px 24px 90px}
+header{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+header img{width:46px;height:46px;border-radius:12px;box-shadow:var(--shadow)}
+header h1{font-size:22px;margin:0;letter-spacing:-.01em}
+header p{margin:2px 0 0;color:var(--muted);font-size:13px}
+header .sp{flex:1}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 16px;font-weight:600;transition:.15s}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary{background:linear-gradient(135deg,var(--accent),#6d5df0);color:var(--accent-ink);border:0;padding:11px 22px;font-size:15px;box-shadow:0 6px 16px rgba(79,70,229,.3)}
+@media (prefers-color-scheme:dark){.btn.primary{color:#0b1020}}
+.btn.primary:hover:not(:disabled){filter:brightness(1.06);color:var(--accent-ink)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tab{background:none;border:0;padding:10px 14px;color:var(--muted);font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:var(--accent);border-color:var(--accent)}
+.tab .n{background:var(--soft);border-radius:99px;padding:1px 8px;font-size:12px;margin-left:6px;color:var(--muted)}
+.tab.on .n{color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.progress{padding:18px 20px;margin-bottom:16px}
+.bar{height:8px;background:var(--soft);border-radius:99px;overflow:hidden;margin:10px 0 8px}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:99px;transition:width .5s}
+.progress b{font-size:15px}.progress small{color:var(--muted)}
+.banner{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;margin-bottom:14px;background:var(--warnbg);color:var(--warn);font-weight:600}
+.banner.bad{background:var(--badbg);color:var(--bad)}.banner .sp{flex:1}
+.toolbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;padding:12px 16px;margin-bottom:14px}
+.toolbar .sum{flex:1;color:var(--muted)}.toolbar .sum b{color:var(--text)}
+.check{display:inline-flex;align-items:center;gap:10px;font-weight:600;cursor:pointer;user-select:none}
+input[type=checkbox]{appearance:none;width:20px;height:20px;border:2px solid var(--line);border-radius:6px;background:var(--card);display:inline-grid;place-content:center;cursor:pointer;flex:none;transition:.12s}
+input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent)}
+input[type=checkbox]:checked::after{content:"";width:5px;height:10px;border:solid var(--accent-ink);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+input[type=checkbox]:disabled{opacity:.4;cursor:default}
+input[type=checkbox].partial{background:var(--accent);border-color:var(--accent)}
+input[type=checkbox].partial::after{content:"";width:10px;height:2px;background:var(--accent-ink);border:0;transform:none}
+.group{margin-bottom:16px;overflow:hidden}
+.ghead{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--soft)}
+.ghead h2{font-size:14px;margin:0;flex:1}.ghead .cnt{color:var(--muted);font-size:12px}
+.ghead.att{background:var(--warnbg)}.ghead.att h2{color:var(--warn)}
+.row{display:grid;grid-template-columns:20px 1fr auto;gap:14px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row:hover{background:color-mix(in srgb,var(--soft) 55%,transparent)}
+.name{font-weight:600;word-break:break-word}.det{color:var(--muted);font-size:12.5px;word-break:break-word}
+.note{color:var(--warn);font-size:12.5px;margin-top:2px}
+.ver{display:flex;align-items:center;gap:6px;font-size:12.5px;white-space:nowrap;justify-content:flex-end}
+.ver .f{color:var(--muted)}.ver .t{background:var(--okbg);color:var(--ok);padding:2px 9px;border-radius:99px;font-weight:600}
+.ver .a{color:var(--muted)}
+.res{font-size:12.5px;margin-top:3px}
+.res.ok{color:var(--ok)}.res.err{color:var(--bad)}.res.run{color:var(--accent)}
+.kind{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 7px;border-radius:6px;margin-right:8px;vertical-align:1px}
+.k-winget{background:#e0ecff;color:#1d4ed8}.k-wu{background:#dff4fb;color:#0e7490}.k-catalog{background:#efe7ff;color:#6d28d9}
+.k-tool{background:#fff0d6;color:#a16207}.k-info{background:#eceef5;color:#475569}
+@media (prefers-color-scheme:dark){.k-winget{background:#16264a;color:#9bbcff}.k-wu{background:#0f2f3a;color:#7dd3e8}.k-catalog{background:#271a47;color:#c4a8ff}.k-tool{background:#3a2d10;color:#fcd34d}.k-info{background:#222a40;color:#aab4cc}}
+.spin{width:14px;height:14px;border:2px solid var(--soft);border-top-color:var(--accent);border-radius:50%;display:inline-block;animation:r .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes r{to{transform:rotate(360deg)}}
+.link{background:none;border:0;color:var(--accent);padding:0;font-weight:600;text-decoration:underline}
+.empty{text-align:center;padding:56px 20px}
+.empty .big{width:84px;height:84px;border-radius:50%;background:var(--okbg);color:var(--ok);display:grid;place-content:center;font-size:44px;margin:0 auto 14px}
+.empty h2{margin:0 0 6px;font-size:20px}.empty p{margin:0;color:var(--muted)}
+.skel{padding:20px;display:grid;gap:14px}.skel i{height:14px;border-radius:6px;background:linear-gradient(90deg,var(--soft),var(--line),var(--soft));background-size:200% 100%;animation:sh 1.4s infinite}
+@keyframes sh{to{background-position:-200% 0}}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}
+th{color:var(--muted);font-weight:600;background:var(--soft);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+.badge{font-size:11.5px;font-weight:700;border-radius:99px;padding:2px 9px;white-space:nowrap}
+.b-ok{background:var(--okbg);color:var(--ok)}.b-problem{background:var(--badbg);color:var(--bad)}.b-generic,.b-old,.b-update{background:var(--warnbg);color:var(--warn)}
+.filter{display:flex;gap:10px;margin-bottom:12px;align-items:center}
+input[type=search]{flex:1;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:9px 12px;font:inherit}
+.sys{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;padding:14px;margin-bottom:14px}
+.sys div{font-size:12.5px;color:var(--muted)}.sys b{display:block;color:var(--text);font-size:13.5px;font-weight:600}
+pre.log{margin:0;padding:16px;white-space:pre-wrap;font:12.5px/1.6 Consolas,"Cascadia Mono",monospace;color:var(--muted)}
+footer{margin-top:22px;display:flex;gap:16px;color:var(--muted);font-size:12.5px;align-items:center}footer .sp{flex:1}
+.modal{position:fixed;inset:0;background:rgba(8,12,26,.55);display:none;place-content:center;z-index:20;padding:20px}
+.modal.on{display:grid}.dlg{background:var(--card);border-radius:16px;padding:24px;max-width:460px;box-shadow:var(--shadow)}
+.dlg h3{margin:0 0 8px;font-size:18px}.dlg p{margin:0 0 8px;color:var(--muted)}.dlg .btns{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+.hide{display:none!important}
+.k-oem,.k-vendor{background:#fff0d6;color:#a16207}.k-setup{background:#e0ecff;color:#1d4ed8}
+@media (prefers-color-scheme:dark){.k-oem,.k-vendor{background:#3a2d10;color:#fcd34d}.k-setup{background:#16264a;color:#9bbcff}}
+.welcome{max-width:620px;margin:6vh auto 0;text-align:center;padding:40px 36px}
+.welcome img{width:96px;height:96px;border-radius:24px;box-shadow:var(--shadow);margin-bottom:18px}
+.welcome h2{font-size:28px;margin:0 0 8px;letter-spacing:-.02em}
+.welcome p{color:var(--muted);margin:0 auto 20px;max-width:46ch;font-size:15px}
+.welcome ul{list-style:none;margin:0 auto 26px;padding:0;text-align:left;display:inline-grid;gap:9px}
+.welcome li::before{content:"✓";display:inline-grid;place-content:center;width:20px;height:20px;border-radius:50%;background:var(--okbg);color:var(--ok);font-size:12px;font-weight:700;margin-right:10px}
+.btn.big{font-size:17px;padding:15px 36px;border-radius:14px}
+.welcome small{display:block;margin-top:14px;color:var(--muted)}
+.loading{max-width:680px;margin:5vh auto 0;padding:30px 32px}
+.loading h2{margin:0;font-size:22px;letter-spacing:-.01em}.loading .sub{color:var(--muted);margin:4px 0 18px}
+.loading .top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.loading .time{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600}
+.bar.big{height:12px;margin:0 0 22px;position:relative}
+.bar.big>i{position:relative;overflow:hidden}
+.bar.big>i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:translateX(-100%);animation:sweep 1.4s infinite}
+@keyframes sweep{to{transform:translateX(100%)}}
+.stages{display:grid;gap:4px}
+.stg{display:grid;grid-template-columns:26px minmax(0,1fr) minmax(0,1.1fr);gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line)}
+.stg:last-child{border-bottom:0}
+.stg .ic{width:22px;height:22px;border-radius:50%;display:grid;place-content:center;font-size:12px;font-weight:700;border:2px solid var(--line);color:var(--muted)}
+.stg.done .ic{background:var(--okbg);border-color:transparent;color:var(--ok)}
+.stg.error .ic{background:var(--badbg);border-color:transparent;color:var(--bad)}
+.stg.running .ic{border-color:var(--soft);border-top-color:var(--accent);animation:r .8s linear infinite}
+.stg .l{font-weight:600}.stg.pending .l{color:var(--muted);font-weight:500}
+.stg .d{color:var(--muted);font-size:12.5px;text-align:right}.stg.running .d{color:var(--accent)}
+@media (max-width:720px){.row{grid-template-columns:20px 1fr}.ver{grid-column:2;justify-content:flex-start}.wrap{padding:14px 12px 90px}.toolbar{flex-wrap:wrap}}
+
+.k-plugin{background:#e6f6e8;color:#15803d}.k-repo{background:#fde8ef;color:#be185d}.k-github{background:#e8e8f0;color:#24292f}
+@media (prefers-color-scheme:dark){.k-plugin{background:#12301a;color:#86efac}.k-repo{background:#3a1424;color:#f9a8d4}.k-github{background:#2a2f3d;color:#e6edf3}}
+.btn.sm{padding:6px 12px;font-size:12.5px}.ghead.miss{background:color-mix(in srgb,var(--accent) 12%,var(--card))}.ghead.miss h2{color:var(--accent)}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card)}
+.lang button{border:0;background:none;padding:8px 11px;font-weight:700;font-size:12.5px;color:var(--muted)}
+.lang button.on{background:var(--accent);color:var(--accent-ink)}
+header{flex-wrap:wrap}
+header .acts{display:flex;gap:8px;align-items:center}
+.dlg.wide{max-width:560px;width:100%}
+.dlg .gh-form{display:grid;gap:10px;margin:12px 0}
+.dlg input[type=text]{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:10px 12px;font:inherit;width:100%}
+.dlg .msg{min-height:18px;font-size:12.5px}.dlg .msg.ok{color:var(--ok)}.dlg .msg.err{color:var(--bad)}
+.gh-list{border:1px solid var(--line);border-radius:12px;max-height:230px;overflow:auto}
+.gh-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line)}
+.gh-item:last-child{border-bottom:0}.gh-item b{flex:1;word-break:break-all}.gh-item small{color:var(--muted)}
+.gh-empty{padding:14px;color:var(--muted);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="/icon.png" alt="">
+    <div><h1>OmniUpdate</h1><p id="subtitle"></p></div>
+    <div class="sp"></div>
+    <div class="acts">
+      <button class="btn hide" id="btnGh" data-i18n="ghBtn"></button>
+      <button class="btn hide" id="btnScan" data-i18n="scanAgain"></button>
+      <div class="lang" role="group" aria-label="Language / Idioma"><button data-l="es" title="Español">ES</button><button data-l="en" title="English">EN</button></div>
+    </div>
+  </header>
+
+  <div id="banners"></div>
+  <div class="card progress hide" id="progress">
+    <b id="pstep"></b>
+    <div class="bar"><i id="pbar" style="width:0%"></i></div>
+    <small id="pdet" data-i18n="installingHint"></small>
+  </div>
+
+  <section id="welcome" class="card welcome hide">
+    <img src="/icon.png" alt="">
+    <h2 data-i18n="welcomeTitle"></h2>
+    <p data-i18n="welcomeText"></p>
+    <ul>
+      <li data-i18n="w1"></li>
+      <li data-i18n="w2"></li>
+      <li data-i18n="w3"></li>
+      <li data-i18n="w4"></li>
+      <li data-i18n="w5"></li>
+      <li data-i18n="w6"></li>
+    </ul>
+    <div><button class="btn primary big" id="btnStart" data-i18n="startBtn"></button></div>
+    <small data-i18n="welcomeSmall"></small>
+  </section>
+
+  <section id="loading" class="card loading hide">
+    <div class="top"><h2 data-i18n="loadingTitle"></h2><span class="time" id="ltime">0:00</span></div>
+    <p class="sub" data-i18n="loadingSub"></p>
+    <div class="bar big"><i id="lbar" style="width:3%"></i></div>
+    <div class="stages" id="stages"></div>
+  </section>
+
+  <div id="main" class="hide">
+  <nav class="tabs" id="tabs">
+    <button class="tab on" data-t="upd"><span data-i18n="tabUpd"></span><span class="n" id="nUpd">0</span></button>
+    <button class="tab" data-t="dev"><span data-i18n="tabDev"></span><span class="n" id="nDev">0</span></button>
+    <button class="tab" data-t="prog"><span data-i18n="tabProg"></span><span class="n" id="nProg">0</span></button>
+    <button class="tab" data-t="log"><span data-i18n="tabLog"></span></button>
+  </nav>
+
+  <section id="t-upd">
+    <div class="card toolbar hide" id="toolbar">
+      <label class="check"><input type="checkbox" id="chkAll"><span id="allLbl"></span></label>
+      <div class="sum" id="sum"></div>
+      <button class="btn primary" id="btnInstall" disabled></button>
+    </div>
+    <div id="list"></div>
+  </section>
+
+  <section id="t-dev" class="hide">
+    <div class="card sys" id="sysbox"></div>
+    <div class="filter"><input type="search" id="qDev" data-i18n-ph="searchDev"><label class="check"><input type="checkbox" id="onlyBad"><span data-i18n="onlyBad"></span></label></div>
+    <div class="card" style="overflow:auto"><table><thead><tr><th data-i18n="thDevice"></th><th data-i18n="thStatus"></th><th data-i18n="thDriver"></th><th data-i18n="thDate"></th></tr></thead><tbody id="devBody"></tbody></table></div>
+  </section>
+
+  <section id="t-prog" class="hide">
+    <div class="filter"><input type="search" id="qProg" data-i18n-ph="searchProg"></div>
+    <div class="card" style="overflow:auto"><table><thead><tr><th data-i18n="thProgram"></th><th data-i18n="thVersion"></th><th data-i18n="thPublisher"></th></tr></thead><tbody id="progBody"></tbody></table></div>
+  </section>
+
+  <section id="t-log" class="hide">
+    <div class="card"><pre class="log" id="logBox"></pre></div>
+  </section>
+
+  </div>
+  <footer><span id="ver"></span><span class="sp"></span><button class="link" id="btnCopy" data-i18n="copyReport"></button></footer>
+</div>
+
+<div class="modal" id="modal"><div class="dlg">
+  <h3 id="mTitle"></h3><p id="mBody"></p>
+  <div class="btns"><button class="btn" id="mNo" data-i18n="cancel"></button><button class="btn primary" id="mYes" data-i18n="install"></button></div>
+</div></div>
+
+<div class="modal" id="ghModal"><div class="dlg wide">
+  <h3 data-i18n="ghTitle"></h3>
+  <p data-i18n="ghIntro"></p>
+  <div class="gh-form">
+    <input type="text" id="ghInput" autocomplete="off" spellcheck="false" data-i18n-ph="ghPlaceholder">
+    <label class="check"><input type="checkbox" id="ghInst"><span data-i18n="ghInstalled"></span></label>
+    <div style="display:flex;gap:10px;align-items:center"><button class="btn primary" id="ghAddBtn" data-i18n="ghAdd"></button><div class="msg" id="ghMsg"></div></div>
+  </div>
+  <div class="gh-list" id="ghList"></div>
+  <div class="btns"><button class="btn" id="ghClose" data-i18n="close"></button></div>
+</div></div>
+
+<script>
+const TOKEN='__TOKEN__';
+const $=id=>document.getElementById(id);
+const sel=new Set();
+let S=null, lastKey='', fails=0, tab='upd', ghDirty=false;
+
+// ------------------------------------------------------------------ languages
+const I18N={
+ es:{subtitle:'Programas, Windows, controladores, plugins y repositorios al día',scanAgain:'Buscar de nuevo',ghBtn:'GitHub',
+  welcomeTitle:'Mantén tu PC al día',welcomeText:'Revisa tus programas, Windows, Office y los controladores de todos tus dispositivos, y lo instala todo por ti.',
+  w1:'Programas desactualizados',w2:'Windows, Office y seguridad',w3:'Controladores de cada dispositivo (red, audio, gráficos, chipset…)',
+  missBtn:'Instalar lo que falta',w4:'Drivers y componentes que faltan, con instalación de un toque',w5:'Plugins (VS Code, npm, Chocolatey), programas de GitHub y repositorios Git',
+  w6:'BIOS, firmware y drivers del fabricante (Dell, Lenovo, HP y ASUS)',startBtn:'Buscar actualizaciones',welcomeSmall:'La revisión completa tarda entre 1 y 3 minutos.',
+  loadingTitle:'Revisando tu equipo…',loadingSub:'No cierres la ventana. Los resultados aparecerán aquí en cuanto termine.',waiting:'En espera',searching:'Buscando…',
+  tabUpd:'Actualizaciones',tabDev:'Dispositivos',tabProg:'Programas',tabLog:'Registro',
+  selectAll:'Seleccionar todo',unselect:'Quitar selección',updateSel:'Actualizar seleccionados',updateSelN:'Actualizar seleccionados ({0})',selectedN:'{0} seleccionada(s)',
+  item1:'1 elemento',itemsN:'{0} elementos',allGood:'Todo está al día',allGoodTxt:'No se encontró nada pendiente en programas, Windows, controladores ni extras.',
+  k_winget:'Programa',k_wu:'Windows',k_catalog:'Driver',k_oem:'Fabricante',k_vendor:'Fabricante',k_setup:'Sistema',k_info:'Aviso',k_plugin:'Plugin',k_repo:'Git',k_github:'GitHub',
+  s_ok:'Correcto',s_problem:'Con problema',s_generic:'Genérico',s_old:'Antiguo',s_update:'Actualizable',
+  thDevice:'Dispositivo',thStatus:'Estado',thDriver:'Controlador',thDate:'Fecha',thProgram:'Programa',thVersion:'Versión',thPublisher:'Editor',
+  searchDev:'Buscar dispositivo…',onlyBad:'Solo los que requieren atención',searchProg:'Buscar programa…',
+  sysWindows:'Windows',sysBuild:'compilación {0}',sysPC:'Equipo',sysBios:'BIOS/UEFI',sysGfx:'Gráficos',
+  queued:'En cola',working:'Trabajando…',rebootBanner:'Hay que reiniciar el equipo para completar la instalación.',rebootNow:'Reiniciar ahora',
+  rebootConfirm:'El equipo se reiniciará en 20 segundos. Guarda tu trabajo. ¿Continuar?',lost:'Se perdió la conexión con el programa. Ciérralo y vuelve a abrirlo.',
+  installingHint:'Instalando. No cierres la ventana hasta que termine.',copyReport:'Copiar informe técnico',copied:'¡Copiado!',demo:' · modo demostración',
+  confTitle:'¿Instalar {0} elemento(s)?',pProg:'{0} programa(s)',pWin:'{0} de Windows/Office',pDrv:'{0} controlador(es)',pVendor:'{0} driver(es) del fabricante',
+  pOem:'actualizaciones del fabricante',pSetup:'winget',pPlugin:'{0} plugin(s)',pRepo:'{0} repositorio(s) Git',pGh:'{0} programa(s) de GitHub',pMiss:'{0} componente(s) que faltan',
+  confRestore:'Antes se crea un punto de restauración por seguridad. ',confUpgrade:'Incluye una actualización de versión de Windows: tarda bastante y reinicia el equipo varias veces. ',
+  confBios:'Si el fabricante incluye una BIOS, se aplica al reiniciar: no apagues el equipo durante ese reinicio. ',confTime:'Puede tardar varios minutos.',
+  install:'Instalar',cancel:'Cancelar',close:'Cerrar',cantStart:'No se pudo empezar',
+  ghTitle:'Programas de GitHub',ghIntro:'Añade un programa de GitHub y OmniUpdate avisará cuando publique una versión nueva y la instalará por ti (MSI, instalador o portátil). Los programas instalados cuya web es de GitHub se detectan solos. Al cerrar esta ventana se volverá a buscar.',
+  ghPlaceholder:'propietario/repositorio o dirección de github.com',ghInstalled:'Ya lo tengo instalado (solo avisar de versiones nuevas)',ghAdd:'Añadir',ghAdding:'Comprobando…',
+  ghAdded:'Añadido: {0}',ghEmpty:'Aún no vigilas ningún programa.',ghRemove:'Quitar',ghInstTag:'Instalada: {0}',ghNotInst:'Sin instalar',ghFail:'No se pudo añadir'},
+ en:{subtitle:'Programs, Windows, drivers, plugins and repositories up to date',scanAgain:'Scan again',ghBtn:'GitHub',
+  welcomeTitle:'Keep your PC up to date',welcomeText:'Checks your programs, Windows, Office and the drivers of all your devices, and installs everything for you.',
+  w1:'Outdated programs',w2:'Windows, Office and security',w3:'Drivers for every device (network, audio, graphics, chipset…)',
+  missBtn:'Install what is missing',w4:'Missing drivers and components, installed in one click',w5:'Plugins (VS Code, npm, Chocolatey), GitHub programs and Git repositories',
+  w6:'Manufacturer BIOS, firmware and drivers (Dell, Lenovo, HP and ASUS)',startBtn:'Check for updates',welcomeSmall:'A full scan takes 1 to 3 minutes.',
+  loadingTitle:'Scanning your PC…',loadingSub:'Don\'t close the window. Results will appear here as soon as it finishes.',waiting:'Waiting',searching:'Searching…',
+  tabUpd:'Updates',tabDev:'Devices',tabProg:'Programs',tabLog:'Log',
+  selectAll:'Select all',unselect:'Clear selection',updateSel:'Update selected',updateSelN:'Update selected ({0})',selectedN:'{0} selected',
+  item1:'1 item',itemsN:'{0} items',allGood:'Everything is up to date',allGoodTxt:'Nothing pending was found in programs, Windows, drivers or extras.',
+  k_winget:'Program',k_wu:'Windows',k_catalog:'Driver',k_oem:'Manufacturer',k_vendor:'Manufacturer',k_setup:'System',k_info:'Notice',k_plugin:'Plugin',k_repo:'Git',k_github:'GitHub',
+  s_ok:'OK',s_problem:'Problem',s_generic:'Generic',s_old:'Old',s_update:'Updatable',
+  thDevice:'Device',thStatus:'Status',thDriver:'Driver',thDate:'Date',thProgram:'Program',thVersion:'Version',thPublisher:'Publisher',
+  searchDev:'Search device…',onlyBad:'Only those needing attention',searchProg:'Search program…',
+  sysWindows:'Windows',sysBuild:'build {0}',sysPC:'Computer',sysBios:'BIOS/UEFI',sysGfx:'Graphics',
+  queued:'Queued',working:'Working…',rebootBanner:'The PC must be restarted to complete the installation.',rebootNow:'Restart now',
+  rebootConfirm:'The PC will restart in 20 seconds. Save your work. Continue?',lost:'The connection to the program was lost. Close it and open it again.',
+  installingHint:'Installing. Do not close the window until it finishes.',copyReport:'Copy technical report',copied:'Copied!',demo:' · demo mode',
+  confTitle:'Install {0} item(s)?',pProg:'{0} program(s)',pWin:'{0} for Windows/Office',pDrv:'{0} driver(s)',pVendor:'{0} manufacturer driver(s)',
+  pOem:'manufacturer updates',pSetup:'winget',pPlugin:'{0} plugin(s)',pRepo:'{0} Git repositor(ies)',pGh:'{0} GitHub program(s)',pMiss:'{0} missing component(s)',
+  confRestore:'A restore point is created first for safety. ',confUpgrade:'Includes a Windows version upgrade: it takes a long time and restarts the PC several times. ',
+  confBios:'If the manufacturer includes a BIOS update, it is applied on restart: do not power off the PC during that restart. ',confTime:'It may take several minutes.',
+  install:'Install',cancel:'Cancel',close:'Close',cantStart:'Could not start',
+  ghTitle:'GitHub programs',ghIntro:'Add a GitHub program and OmniUpdate will tell you when a new version is published and install it for you (MSI, installer or portable). Installed programs whose website is on GitHub are detected automatically. Closing this window runs a new scan.',
+  ghPlaceholder:'owner/repository or github.com address',ghInstalled:'I already have it installed (only notify about new versions)',ghAdd:'Add',ghAdding:'Checking…',
+  ghAdded:'Added: {0}',ghEmpty:'You are not watching any program yet.',ghRemove:'Remove',ghInstTag:'Installed: {0}',ghNotInst:'Not installed',ghFail:'Could not add it'}
+};
+let lang=(()=>{try{const v=localStorage.getItem('omniupdate.lang'); if(v==='es'||v==='en')return v;}catch(e){} return null;})();
+let langFromUser=!!lang;
+if(!lang)lang=(navigator.language||'en').toLowerCase().startsWith('es')?'es':'en';
+function t(k,...a){let s=(I18N[lang]&&I18N[lang][k])||I18N.es[k]||k; a.forEach((v,i)=>{s=s.split('{'+i+'}').join(v);}); return s;}
+// The program's texts arrive as "Spanish\x1fEnglish"
+function L(s){ if(s==null)return ''; s=String(s); const i=s.indexOf('\x1f'); if(i<0)return s; return lang==='en'?s.slice(i+1):s.slice(0,i); }
+function setLang(l,fromUser){ lang=l; if(fromUser){langFromUser=true; try{localStorage.setItem('omniupdate.lang',l);}catch(e){}} applyStatic(); lastKey=''; if(S)render(); }
+function applyStatic(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-i18n]').forEach(e=>{e.textContent=t(e.dataset.i18n);});
+  document.querySelectorAll('[data-i18n-ph]').forEach(e=>{e.placeholder=t(e.dataset.i18nPh);});
+  document.querySelectorAll('.lang button').forEach(b=>b.classList.toggle('on',b.dataset.l===lang));
+  $('mNo').textContent=t('cancel'); if(!$('modal').classList.contains('on'))$('mYes').textContent=t('install');
+  if(!S){ $('subtitle').textContent=t('subtitle'); }
+}
+
+function h(tag,props,...kids){const e=document.createElement(tag);
+  for(const [k,v] of Object.entries(props||{})){ if(k==='class')e.className=v; else if(k.startsWith('on'))e.addEventListener(k.slice(2),v); else if(v!==false&&v!=null)e.setAttribute(k,v); }
+  for(const k of kids.flat()){ if(k==null||k===false)continue; e.append(k.nodeType?k:document.createTextNode(k)); } return e; }
+
+async function api(path,body){
+  const r=await fetch(path,{method:body===undefined?'GET':'POST',headers:{'X-Token':TOKEN,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+  if(!r.ok)throw new Error('HTTP '+r.status); return r;
+}
+
+async function poll(){
+  let s;
+  try{ const r=await api('/api/state'); s=await r.json(); fails=0; }
+  catch(e){ fails++; if(fails>=3)showLost(); return; }
+  for(const k of ['items','devices','programs','log','stages','groups'])if(!Array.isArray(s[k]))s[k]=[];
+  if(!S&&!langFromUser&&(s.lang==='es'||s.lang==='en')){ lang=s.lang; applyStatic(); }
+  S=s;
+  const key=JSON.stringify([lang,s.phase,s.items,s.devices.length,s.programs.length,s.log.length,s.reboot,s.summary,Math.round(s.percent),s.step,s.stages,s.elapsedSec]);
+  if(key!==lastKey){ lastKey=key; try{ render(); }catch(e){ console.error(e); } }
+}
+function showLost(){ $('banners').replaceChildren(h('div',{class:'banner bad'},t('lost'))); }
+
+function busy(){return S&&S.phase!=='idle';}
+function selectable(){return S.items.filter(i=>i.selectable&&i.status!=='done');}
+
+function render(){
+  const s=S; $('ver').textContent='OmniUpdate '+s.version+(s.demo?t('demo'):'');
+  const sy=s.system; $('subtitle').textContent=[sy.os,[sy.manufacturer,sy.model].filter(Boolean).join(' ')].filter(Boolean).join(' · ')||t('subtitle');
+  for(const id of [...sel]){const it=s.items.find(x=>x.id===id); if(!it||!it.selectable||it.status==='done')sel.delete(id);}
+  const view=S.phase==='scanning'?'loading':(!S.scanned?'welcome':'main');
+  $('welcome').classList.toggle('hide',view!=='welcome'); $('loading').classList.toggle('hide',view!=='loading'); $('main').classList.toggle('hide',view!=='main');
+  $('btnScan').classList.toggle('hide',view!=='main'); $('btnScan').disabled=busy();
+  $('btnGh').classList.toggle('hide',view==='loading'); $('btnGh').disabled=busy();
+  if(view==='loading')renderLoading();
+  const pg=$('progress'); pg.classList.toggle('hide',S.phase!=='installing');
+  if(S.phase==='installing'){ $('pstep').textContent=L(s.step)||t('working'); $('pbar').style.width=Math.max(3,s.percent)+'%'; }
+  const bn=[]; if(s.reboot&&!busy()) bn.push(h('div',{class:'banner'},h('span',null,t('rebootBanner')),h('span',{class:'sp'}),h('button',{class:'btn',onclick:reboot},t('rebootNow'))));
+  $('banners').replaceChildren(...bn);
+  $('nUpd').textContent=s.items.filter(i=>i.selectable||i.group==='att').length;
+  $('nDev').textContent=s.devices.length; $('nProg').textContent=s.programs.length;
+  renderList(); renderDevices(); renderPrograms(); $('logBox').textContent=s.log.map(L).join('\n');
+}
+
+function fmtTime(x){return Math.floor(x/60)+':'+String(x%60).padStart(2,'0');}
+function renderLoading(){
+  $('ltime').textContent=fmtTime(S.elapsedSec||0); $('lbar').style.width=Math.max(3,S.percent)+'%';
+  const ic={pending:'',running:'',done:'✓',error:'!'};
+  $('stages').replaceChildren(...(S.stages||[]).map(st=>h('div',{class:'stg '+st.state},h('span',{class:'ic'},ic[st.state]),h('span',{class:'l'},L(st.label)),h('span',{class:'d'},st.state==='pending'?t('waiting'):(L(st.detail)||(st.state==='running'?t('searching'):''))))));
+}
+function renderList(){
+  const s=S, list=$('list'); const tb=$('toolbar');
+  if(!s.scanned){tb.classList.add('hide'); list.replaceChildren(); return;}
+  if(s.items.length===0){tb.classList.add('hide'); list.replaceChildren(h('div',{class:'card empty'},h('div',{class:'big'},'✓'),h('h2',null,t('allGood')),h('p',null,t('allGoodTxt')))); return;}
+  const cand=selectable(); tb.classList.toggle('hide',cand.length===0&&!s.items.some(i=>i.status));
+  const n=cand.filter(i=>sel.has(i.id)).length;
+  const all=$('chkAll'); all.checked=cand.length>0&&n===cand.length; all.classList.toggle('partial',n>0&&n<cand.length); if(all.classList.contains('partial'))all.checked=true;
+  all.disabled=busy()||cand.length===0; $('allLbl').textContent=(cand.length>0&&n===cand.length)?t('unselect'):t('selectAll');
+  $('sum').replaceChildren(h('span',null,s.summary&&!busy()?L(s.summary)+' ':''),n?h('b',null,t('selectedN',n)):'');
+  const bi=$('btnInstall'); bi.disabled=busy()||n===0; bi.textContent=n?t('updateSelN',n):t('updateSel');
+  const frag=[];
+  for(const g of s.groups){
+    const items=s.items.filter(i=>i.group===g.id); if(!items.length)continue;
+    const gc=items.filter(i=>i.selectable&&i.status!=='done'); const gn=gc.filter(i=>sel.has(i.id)).length;
+    const gcb=h('input',{type:'checkbox',onchange:e=>{for(const i of gc){e.target.checked?sel.add(i.id):sel.delete(i.id);} renderList();}});
+    gcb.checked=gc.length>0&&gn===gc.length; if(gn>0&&gn<gc.length){gcb.classList.add('partial');gcb.checked=true;}
+    if(busy()||gc.length===0)gcb.disabled=true;
+    const rows=items.map(rowFor);
+    frag.push(h('div',{class:'card group'},h('div',{class:'ghead'+(g.id==='att'?' att':g.id==='missing'?' miss':'')},gc.length?gcb:h('span',{style:'width:20px'}),h('h2',null,L(g.title)),h('span',{class:'cnt'},items.length===1?t('item1'):t('itemsN',items.length)),(g.id==='missing'&&gc.length&&!busy())?h('button',{class:'btn primary sm',onclick:()=>{sel.clear();for(const i of gc)sel.add(i.id);renderList();confirmInstall();}},t('missBtn')):null),rows));
+  }
+  list.replaceChildren(...frag);
+}
+
+function rowFor(it){
+  const cb=h('input',{type:'checkbox',onchange:e=>{e.target.checked?sel.add(it.id):sel.delete(it.id);renderList();}});
+  cb.checked=sel.has(it.id); cb.disabled=!it.selectable||busy()||it.status==='done';
+  const ver=h('div',{class:'ver'});
+  const from=L(it.from), to=L(it.to);
+  if(from)ver.append(h('span',{class:'f'},from)); if(from&&to)ver.append(h('span',{class:'a'},'→')); if(to)ver.append(h('span',{class:from?'t':'f'},to));
+  let res=null;
+  if(it.status==='queued')res=h('div',{class:'res'},t('queued'));
+  else if(it.status==='working')res=h('div',{class:'res run'},h('span',{class:'spin'}),L(it.result)||t('working'));
+  else if(it.status==='done')res=h('div',{class:'res ok'},'✔ '+L(it.result));
+  else if(it.status==='error')res=h('div',{class:'res err'},'✖ '+L(it.result));
+  const kind=I18N.es['k_'+it.kind]?t('k_'+it.kind):'';
+  const left=h('div',null,
+    h('div',{class:'name'},h('span',{class:'kind k-'+it.kind},kind),L(it.name)),
+    it.detail?h('div',{class:'det'},L(it.detail)):null,
+    it.note?h('div',{class:'note'},L(it.note)):null,
+    res);
+  return h('div',{class:'row'},it.selectable?cb:h('span'),left,ver);
+}
+
+const SCLASS={ok:'b-ok',problem:'b-problem',generic:'b-generic',old:'b-old',update:'b-update'};
+function renderDevices(){
+  const sy=S.system, g=(sy.gpus||[]).map(x=>x.name+' ('+x.version+')').join(', ');
+  const box=$('sysbox'); const f=(a,b)=>h('div',null,a,h('b',null,b||'—'));
+  box.replaceChildren(f(t('sysWindows'),[sy.os,sy.build?t('sysBuild',sy.build):''].filter(Boolean).join(' · ')),f(t('sysPC'),[sy.manufacturer,sy.model].filter(Boolean).join(' ')),f(t('sysBios'),[sy.biosVersion,sy.biosDate].filter(Boolean).join(' · ')),f(t('sysGfx'),g));
+  const q=$('qDev').value.toLowerCase(), bad=$('onlyBad').checked;
+  const rows=S.devices.filter(d=>(!bad||d.status!=='ok')&&(!q||(L(d.name)+' '+d.provider+' '+d.class).toLowerCase().includes(q)));
+  $('devBody').replaceChildren(...rows.map(d=>h('tr',null,h('td',null,h('b',null,L(d.name)),h('div',{class:'det'},d.class)),h('td',null,h('span',{class:'badge '+(SCLASS[d.status]||'b-ok')},t('s_'+d.status)),d.note?h('div',{class:'det'},L(d.note)):null),h('td',null,[d.provider,d.version].filter(Boolean).join(' · ')||'—'),h('td',null,d.date||'—'))));
+}
+function renderPrograms(){
+  const q=$('qProg').value.toLowerCase();
+  $('progBody').replaceChildren(...S.programs.filter(p=>!q||(p.name+' '+p.publisher).toLowerCase().includes(q)).map(p=>h('tr',null,h('td',null,p.name),h('td',null,p.version||'—'),h('td',null,p.publisher||'—'))));
+}
+
+function confirmInstall(){
+  const chosen=S.items.filter(i=>sel.has(i.id)); if(!chosen.length)return;
+  const inG=(i,g)=>i.group===g, parts=[];
+  const miss=chosen.filter(i=>inG(i,'missing')).length, rest=chosen.filter(i=>!inG(i,'missing'));
+  const c=k=>rest.filter(i=>i.kind===k).length;
+  if(miss)parts.push(t('pMiss',miss));
+  if(c('winget'))parts.push(t('pProg',c('winget')));
+  if(c('plugin'))parts.push(t('pPlugin',c('plugin')));
+  if(c('github'))parts.push(t('pGh',c('github')));
+  if(c('repo'))parts.push(t('pRepo',c('repo')));
+  const win=rest.filter(i=>i.kind==='wu'&&i.group==='windows').length; if(win)parts.push(t('pWin',win));
+  const drv=rest.filter(i=>i.kind==='catalog'||(i.kind==='wu'&&i.group==='drivers')).length; if(drv)parts.push(t('pDrv',drv));
+  if(c('vendor'))parts.push(t('pVendor',c('vendor')));
+  if(c('oem'))parts.push(t('pOem'));
+  if(c('setup'))parts.push(t('pSetup'));
+  $('mTitle').textContent=t('confTitle',chosen.length);
+  let x=parts.join(', ')+'. ';
+  if(chosen.some(i=>['wu','catalog','vendor','oem'].includes(i.kind)))x+=t('confRestore');
+  if(chosen.some(i=>/Actualización de versión|version upgrade/.test(String(i.note||''))))x+=t('confUpgrade');
+  if(c('oem'))x+=t('confBios');
+  x+=t('confTime');
+  $('mBody').textContent=x; $('mYes').textContent=t('install');
+  $('modal').classList.add('on');
+}
+async function doInstall(){ $('modal').classList.remove('on'); const r=await(await api('/api/install',{ids:[...sel]})).json(); if(!r.ok)alert(L(r.error)||t('cantStart')); poll(); }
+async function reboot(){ if(confirm(t('rebootConfirm'))){await api('/api/reboot',{});} }
+
+const startScan=async()=>{sel.clear(); lastKey=''; await api('/api/scan',{}); poll();};
+
+// ------------------------------------------------------------------ GitHub programs
+async function loadGh(){
+  let list=[]; try{ list=await(await api('/api/github')).json(); }catch(e){}
+  const box=$('ghList');
+  if(!Array.isArray(list)||!list.length){ box.replaceChildren(h('div',{class:'gh-empty'},t('ghEmpty'))); return; }
+  box.replaceChildren(...list.map(e=>h('div',{class:'gh-item'},h('b',null,e.repo),h('small',null,e.tag?t('ghInstTag',e.tag):t('ghNotInst')),
+    h('button',{class:'btn',onclick:async()=>{await api('/api/github/remove',{repo:e.repo}); ghDirty=true; loadGh();}},t('ghRemove')))));
+}
+function openGh(){ $('ghMsg').textContent=''; $('ghMsg').className='msg'; $('ghModal').classList.add('on'); loadGh(); $('ghInput').focus(); }
+function closeGh(){ $('ghModal').classList.remove('on'); if(ghDirty&&!busy()){ ghDirty=false; startScan(); } ghDirty=false; }
+async function addGh(){
+  const v=$('ghInput').value.trim(); if(!v)return;
+  const msg=$('ghMsg'); msg.className='msg'; msg.textContent=t('ghAdding'); $('ghAddBtn').disabled=true;
+  try{
+    const r=await(await api('/api/github/add',{repo:v,installed:$('ghInst').checked})).json();
+    if(r.ok){ msg.className='msg ok'; msg.textContent=t('ghAdded',r.entry.repo); $('ghInput').value=''; ghDirty=true; loadGh(); }
+    else { msg.className='msg err'; msg.textContent=L(r.error)||t('ghFail'); }
+  }catch(e){ msg.className='msg err'; msg.textContent=t('ghFail'); }
+  $('ghAddBtn').disabled=false;
+}
+
+$('btnScan').onclick=startScan; $('btnStart').onclick=startScan;
+$('btnGh').onclick=openGh; $('ghClose').onclick=closeGh; $('ghAddBtn').onclick=addGh;
+$('ghInput').addEventListener('keydown',e=>{if(e.key==='Enter')addGh();});
+$('btnInstall').onclick=confirmInstall; $('mNo').onclick=()=>$('modal').classList.remove('on'); $('mYes').onclick=doInstall;
+$('chkAll').onchange=e=>{const cand=selectable(); if(e.target.checked)cand.forEach(i=>sel.add(i.id)); else cand.forEach(i=>sel.delete(i.id)); renderList();};
+$('qDev').oninput=()=>S&&renderDevices(); $('onlyBad').onchange=()=>S&&renderDevices(); $('qProg').oninput=()=>S&&renderPrograms();
+document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>setLang(b.dataset.l,true));
+$('btnCopy').onclick=async()=>{const x=await(await api('/api/diag?lang='+lang)).text(); try{await navigator.clipboard.writeText(x);$('btnCopy').textContent=t('copied');}catch(e){const w=window.open('','_blank');if(w){w.document.write('<pre>'+x.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre>');}} setTimeout(()=>$('btnCopy').textContent=t('copyReport'),2000);};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t; document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b)); for(const k of ['upd','dev','prog','log'])$('t-'+k).classList.toggle('hide',k!==tab);});
+
+applyStatic();
+(async()=>{ await poll(); setInterval(poll,900); })();
+</script>
+</body>
+</html>
