@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-go@v5
         with: { go-version: "1.24" }
       - name: Build, vet and test
-        run: ./build.sh "${GITHUB_REF_NAME#v}"
+        run: bash ./build.sh "${GITHUB_REF_NAME#v}"
       - name: SHA-256
         run: cd dist && sha256sum *.exe | tee SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
