@@ -1,0 +1,13 @@
+# Resultado de compilar / build output
+/dist/
+*.exe
+*.syso
+cmd/omniupdate-setup/payload/*.gz
+cmd/omniupdate-setup/payload/app.ico
+/omniupdate
+/omniupdate-setup
+# Editores / editors
+.vscode/
+.idea/
+*.swp
+.DS_Store

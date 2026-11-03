@@ -1,0 +1,24 @@
+name: build
+on:
+  push: { branches: [main] }
+  pull_request:
+  release: { types: [published] }
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.24" }
+      - name: Build, vet and test
+        run: ./build.sh "${GITHUB_REF_NAME#v}"
+      - name: SHA-256
+        run: cd dist && sha256sum *.exe | tee SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with: { name: OmniUpdate, path: dist/* }
+      - name: Attach to the release
+        if: github.event_name == 'release'
+        run: gh release upload "$GITHUB_REF_NAME" dist/OmniUpdate-Setup.exe dist/OmniUpdate.exe dist/SHA256SUMS.txt --clobber
+        env: { GH_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
