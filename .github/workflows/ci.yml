@@ -26,7 +26,7 @@ jobs:
           GOOS=windows GOARCH=amd64 "$(go env GOPATH)/bin/govulncheck" ./cmd/...
       - name: SHA-256
         run: cd dist && sha256sum *.exe | tee SHA256SUMS.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: OmniUpdate-dev-build, path: dist/*, retention-days: 14 }
 
   # Runs the unit tests on a real Windows machine. It does not block merges yet: once it has been green
