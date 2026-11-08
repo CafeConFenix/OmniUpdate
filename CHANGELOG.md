@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0
+- **Security**: programs that OmniUpdate only *detected* from an installed program's website (not added by you) are now installed only when the file can be proven genuine: the SHA-256 that GitHub publishes for it, or a valid digital signature. Programs you add yourself behave as before.
+- **Security**: Microsoft Update Catalog driver packages are checked for a broken digital signature (tampering) before installation, and download redirects must stay on Microsoft hosts over HTTPS.
+- **Security**: the local interface also rejects requests from a foreign `Origin`, and sends `X-Content-Type-Options` and `Referrer-Policy` headers.
+- Releases are now built and published by GitHub Actions when a `v*` tag is pushed, with `SHA256SUMS.txt` and a build-provenance attestation (`gh attestation verify`). Optional Authenticode signing (`tools/sign.sh`).
+- CI: gofmt, vet, tests, `govulncheck` and a Windows test job. Dependabot, PR and issue templates.
+- The version now lives in one place (the `VERSION` file).
+
 ## 1.2.1
 - Fix: the app window could open empty/grey on some PCs. Edge/Chrome was started with a hidden-window flag; it now starts normally, bypasses system proxies for the local address and disables GPU acceleration (a common cause of blank windows).
 - If the app window does not answer within 15 s, the interface is opened automatically in the default browser.

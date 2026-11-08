@@ -256,6 +256,12 @@ func (a *App) installCatalog(ctx context.Context, cl *catalogClient, it *Item) (
 	if err := cl.download(ctx, url, cab); err != nil {
 		return false, Cat(T("Falló la descarga: ", "Download failed: "), errText(err)), false
 	}
+	// The Microsoft Update Catalog signs its .cab files: a broken signature means the file was altered.
+	sig := runPS(ctx, 3*time.Minute, signatureScript, cab)
+	a.diagf("firma de %s: %s", guid, strings.TrimSpace(sig.Out))
+	if signatureTampered(sig.Out) {
+		return false, T("El paquete está alterado (la firma digital no coincide): no se instala", "The package has been tampered with (the digital signature does not match): it will not be installed"), false
+	}
 	_ = os.RemoveAll(dir)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return false, errText(err), false

@@ -22,12 +22,19 @@ func (a *App) routes(host string) http.Handler {
 				http.Error(w, "forbidden host", http.StatusForbidden)
 				return
 			}
+			// Defence in depth against cross-site requests: a browser always sends Origin on cross-origin
+			// POSTs, and it must be this very page. (The random token is the main protection.)
+			if o := r.Header.Get("Origin"); o != "" && o != "http://"+host {
+				http.Error(w, "forbidden origin", http.StatusForbidden)
+				return
+			}
 			if subtle.ConstantTimeCompare([]byte(r.Header.Get("X-Token")), []byte(a.token)) != 1 &&
 				subtle.ConstantTimeCompare([]byte(r.URL.Query().Get("t")), []byte(a.token)) != 1 {
 				http.Error(w, "forbidden", http.StatusForbidden)
 				return
 			}
 			w.Header().Set("Cache-Control", "no-store")
+			w.Header().Set("X-Content-Type-Options", "nosniff")
 			h(w, r)
 		}
 	}
@@ -39,6 +46,8 @@ func (a *App) routes(host string) http.Handler {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Referrer-Policy", "no-referrer")
 		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'unsafe-inline' 'self'; script-src 'unsafe-inline' 'self'; img-src 'self' data:; connect-src 'self'")
 		fmt.Fprint(w, strings.ReplaceAll(indexHTML, "__TOKEN__", a.token))
 	})

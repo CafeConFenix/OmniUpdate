@@ -253,7 +253,19 @@ func (c *catalogClient) download(ctx context.Context, rawURL, dest string) error
 	if err != nil {
 		return err
 	}
-	dl := &http.Client{Timeout: 30 * time.Minute}
+	// Every redirect must also stay on a Microsoft download host over HTTPS.
+	dl := &http.Client{
+		Timeout: 30 * time.Minute,
+		CheckRedirect: func(r *http.Request, via []*http.Request) error {
+			if len(via) >= 5 {
+				return terr("demasiadas redirecciones", "too many redirects")
+			}
+			if !trustedDownloadURL(r.URL.String()) {
+				return terr("redirección a un sitio no permitido", "redirect to a site that is not allowed")
+			}
+			return nil
+		},
+	}
 	resp, err := dl.Do(req)
 	if err != nil {
 		return err

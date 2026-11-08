@@ -1,0 +1,42 @@
+name: ci
+on:
+  push: { branches: [main] }
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod, cache: false }
+      - name: gofmt
+        run: |
+          out="$(gofmt -l cmd internal tools)"
+          if [ -n "$out" ]; then echo "Not formatted (run gofmt -w):"; echo "$out"; exit 1; fi
+      - name: Build, vet and test (cross-compiles the Windows .exe files)
+        run: bash ./build.sh dev
+      - name: Known vulnerabilities in the Go standard library
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          GOOS=windows GOARCH=amd64 "$(go env GOPATH)/bin/govulncheck" ./cmd/...
+      - name: SHA-256
+        run: cd dist && sha256sum *.exe | tee SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with: { name: OmniUpdate-dev-build, path: dist/*, retention-days: 14 }
+
+  # Runs the unit tests on a real Windows machine. It does not block merges yet: once it has been green
+  # for a while, delete the `continue-on-error` line so that it does.
+  windows:
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod, cache: false }
+      - run: go vet ./cmd/omniupdate ./internal/...
+      - run: go test ./cmd/omniupdate ./internal/...

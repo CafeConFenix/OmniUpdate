@@ -5,14 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -580,12 +578,19 @@ func (a *App) installGithub(ctx context.Context, it *Item) (bool, string, bool) 
 			return false, T("La descarga no coincide con la huella (SHA-256) publicada por GitHub: no se instala", "The download does not match the SHA-256 fingerprint published by GitHub: it will not be installed"), false
 		}
 	}
+	sigOut := ""
 	if kind == "msi" || kind == "setup" || kind == "portable" {
 		sig := runPS(ctx, 3*time.Minute, signatureScript, dl)
+		sigOut = sig.Out
 		a.diagf("firma de %s: %s", fname, strings.TrimSpace(sig.Out))
-		if strings.HasPrefix(strings.TrimSpace(sig.Out), "HashMismatch") {
+		if signatureTampered(sig.Out) {
 			return false, T("El archivo está alterado (la firma digital no coincide): no se instala", "The file has been tampered with (the digital signature does not match): it will not be installed"), false
 		}
+	}
+	// A program that was only *guessed* from an installed program's website field (not added by the user)
+	// runs as administrator, so it needs proof: the SHA-256 published by GitHub or a valid digital signature.
+	if err := githubTrustCheck(d["origin"], d["digest"], sigOut); err != nil {
+		return false, errText(err), false
 	}
 	a.setItem(it, "working", T("Instalando…", "Installing…"))
 	reboot := false
@@ -650,5 +655,13 @@ func (a *App) installGithub(ctx context.Context, it *Item) (bool, string, bool) 
 	return true, msg, reboot
 }
 
-var _ = io.EOF
-var _ = sort.Strings
+// githubTrustCheck decides whether a downloaded installer may be run. Programs the user added on purpose
+// ("tracked") are allowed as before; programs that were only detected ("discovered") need either the
+// SHA-256 that GitHub published for the file (already compared by the caller) or a valid signature.
+func githubTrustCheck(origin, digest, sigOut string) error {
+	if origin != "discovered" || len(digest) == 64 || signatureValid(sigOut) {
+		return nil
+	}
+	return terr("Este programa se detectó automáticamente y no hay forma de comprobar que el archivo es auténtico (ni huella SHA-256 de GitHub ni firma digital válida). Añádelo tú mismo en «Programas de GitHub» si te fías de él.",
+		"This program was detected automatically and there is no way to check that the file is genuine (no GitHub SHA-256 and no valid digital signature). Add it yourself under “GitHub programs” if you trust it.")
+}

@@ -15,3 +15,9 @@ Rules of thumb:
 - **Parsers need tests.** Anything that reads command output (winget, npm, choco, git…) gets a unit test with a real output sample.
 - Code, comments, commit messages and docs are written in English.
 - Run `gofmt` and `go vet ./...` before opening a pull request.
+
+## Releasing (maintainers)
+
+1. Put the new version in `VERSION` and a `## x.y.z` section at the top of `CHANGELOG.md`.
+2. Commit and push to `main`; wait for CI to be green.
+3. `git tag vX.Y.Z && git push origin vX.Y.Z` — the *release* workflow builds, (signs,) checksums, attests and publishes the GitHub release.

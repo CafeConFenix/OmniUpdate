@@ -24,7 +24,8 @@ var iconPNG []byte
 
 const appName = "OmniUpdate"
 
-var version = "1.0.0"
+// version is set at build time (-ldflags "-X main.version=…"); see VERSION.
+var version = "dev"
 
 func main() {
 	demo := flag.Bool("demo", false, "modo demostración con datos de ejemplo (no toca el sistema)")

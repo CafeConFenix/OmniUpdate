@@ -32,6 +32,17 @@ Everything runs without windows or prompts, a restore point is created before dr
 
 Requirements: Windows 10 (1809+) or Windows 11, internet access. Uninstall from *Settings → Apps*.
 
+> **Windows SmartScreen** may show “Windows protected your PC” for a new, small program. Check the download as described below, then choose *More info → Run anyway*.
+
+### Verify your download
+
+Every release publishes `SHA256SUMS.txt` and a build-provenance attestation that proves the files were built by this repository's GitHub Actions workflow.
+
+```powershell
+Get-FileHash .\OmniUpdate-Setup.exe -Algorithm SHA256        # must match SHA256SUMS.txt
+gh attestation verify .\OmniUpdate-Setup.exe --repo CafeConFenix/OmniUpdate   # needs the GitHub CLI
+```
+
 ## Language
 
 OmniUpdate starts in your Windows language (Spanish or English). Switch any time with the **ES / EN** buttons, with no rescan.
@@ -42,7 +53,7 @@ Needs [Go](https://go.dev/dl/) 1.24+. The build cross-compiles, so it works from
 
 ```bash
 ./build.sh 1.2.1        # → dist/OmniUpdate.exe and dist/OmniUpdate-Setup.exe
-make test               # unit tests (any OS)
+make vet test           # gofmt, go vet and unit tests (any OS)
 make demo               # UI with sample data, no changes to your system
 ```
 
@@ -56,6 +67,7 @@ cmd/omniupdate-setup/   the single-file installer
 internal/sys/           Windows helpers (elevation, single instance, processes)
 tools/genicon/          generates the icon (PNG + multi-size ICO)
 tools/mkres/            generates the Windows resource file (.syso)
+tools/sign.sh           optional Authenticode signing used by build.sh
 docs/                   architecture notes and screenshots
 ```
 

@@ -1,0 +1,99 @@
+name: release
+# Publishing a release = pushing a tag:   git tag v1.3.0 && git push origin v1.3.0
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write        # create the release and upload the files
+  id-token: write        # build provenance attestation
+  attestations: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      HAS_CERT: ${{ secrets.SIGN_PFX_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # If you published the release yourself with files (e.g. signed on your PC), do not overwrite them.
+      - name: Skip if the release already has files
+        id: chk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name' 2>/dev/null | grep -qx 'OmniUpdate-Setup.exe'; then
+            echo "::notice::Release $GITHUB_REF_NAME already has OmniUpdate-Setup.exe: leaving it untouched."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-go@v5
+        if: steps.chk.outputs.skip != 'true'
+        with: { go-version-file: go.mod, cache: false }
+
+      - name: The tag must match the VERSION file
+        if: steps.chk.outputs.skip != 'true'
+        run: |
+          want="$(tr -d '[:space:]' < VERSION)"
+          if [ "${GITHUB_REF_NAME#v}" != "$want" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match VERSION ($want). Fix VERSION, delete the tag and tag again."
+            exit 1
+          fi
+
+      - name: Install osslsigncode (only when a signing certificate is configured)
+        if: env.HAS_CERT == 'true' && steps.chk.outputs.skip != 'true'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq osslsigncode
+
+      - name: Build and test (signing the .exe files if a certificate is configured)
+        if: steps.chk.outputs.skip != 'true'
+        env:
+          SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
+          PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
+        run: |
+          if [ -n "$SIGN_PFX_BASE64" ]; then
+            echo "$SIGN_PFX_BASE64" | base64 -d > "$RUNNER_TEMP/cert.pfx"
+            export PFX_FILE="$RUNNER_TEMP/cert.pfx" SIGN_HOOK=tools/sign.sh
+          else
+            echo "::warning::No signing certificate configured: the .exe files are NOT signed (Windows SmartScreen will warn)."
+          fi
+          bash ./build.sh "${GITHUB_REF_NAME#v}"
+          rm -f "$RUNNER_TEMP/cert.pfx"
+
+      - name: SHA-256 checksums
+        if: steps.chk.outputs.skip != 'true'
+        run: cd dist && sha256sum OmniUpdate-Setup.exe OmniUpdate.exe | tee SHA256SUMS.txt
+
+      - name: Provenance attestation (proves these files were built by this workflow)
+        if: steps.chk.outputs.skip != 'true'
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "dist/*.exe"
+
+      - name: Release notes from CHANGELOG.md
+        if: steps.chk.outputs.skip != 'true'
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          awk -v v="$v" '$0 == "## " v {f=1; next} /^## / {f=0} f' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then echo "See [CHANGELOG.md](CHANGELOG.md)." > notes.md; fi
+          {
+            echo
+            echo "---"
+            echo "**Verify your download** (PowerShell): \`Get-FileHash .\\OmniUpdate-Setup.exe -Algorithm SHA256\` and compare with \`SHA256SUMS.txt\`."
+            echo "Or, with the GitHub CLI: \`gh attestation verify OmniUpdate-Setup.exe --repo ${GITHUB_REPOSITORY}\`."
+          } >> notes.md
+
+      - name: Create (or update) the GitHub release
+        if: steps.chk.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pre=""
+          case "$GITHUB_REF_NAME" in *-*) pre="--prerelease";; esac
+          files="dist/OmniUpdate-Setup.exe dist/OmniUpdate.exe dist/SHA256SUMS.txt"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" $files --clobber
+            gh release edit "$GITHUB_REF_NAME" --notes-file notes.md
+          else
+            gh release create "$GITHUB_REF_NAME" $files --verify-tag --title "OmniUpdate ${GITHUB_REF_NAME#v}" --notes-file notes.md $pre
+          fi

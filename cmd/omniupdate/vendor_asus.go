@@ -613,6 +613,16 @@ func findFile(dir, name string) string {
 
 const signatureScript = `$s = Get-AuthenticodeSignature -LiteralPath $args[0]; "$($s.Status)|$($s.SignerCertificate.Subject)"`
 
+// signatureTampered reports whether the output of signatureScript says the file was altered after signing.
+func signatureTampered(out string) bool {
+	return strings.HasPrefix(strings.TrimSpace(out), "HashMismatch")
+}
+
+// signatureValid reports whether the output of signatureScript says the file has a valid digital signature.
+func signatureValid(out string) bool {
+	return strings.HasPrefix(strings.TrimSpace(out), "Valid|")
+}
+
 // installVendor downloads the vendor's package, verifies its fingerprint and digital signature and
 // installs it with the silent parameters the vendor itself publishes.
 func (a *App) installVendor(ctx context.Context, it *Item) (ok bool, msg string, reboot bool) {

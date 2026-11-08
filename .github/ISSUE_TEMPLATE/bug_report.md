@@ -3,11 +3,15 @@ name: Bug report
 about: Something does not work
 labels: bug
 ---
-**What happened?**
+**What happened?** (and what did you expect?)
 
-**Windows version, PC maker and model** (shown in the *Devices* tab)
+**OmniUpdate version** (shown at the top of the technical report)
 
-**Technical report** — use the *Copy technical report* button at the bottom of the app
+**Windows version, PC maker and model** (also in the technical report)
+
+**Technical report** — press *Copy technical report* at the bottom of the app and paste it here.
 ```
 paste it here
 ```
+
+**Startup log** (only if the window stayed blank): `%LOCALAPPDATA%\OmniUpdate\omniupdate.log`

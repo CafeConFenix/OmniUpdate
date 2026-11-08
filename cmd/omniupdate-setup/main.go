@@ -30,7 +30,8 @@ const (
 	uninstallKey = `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\OmniUpdate`
 )
 
-var version = "1.0.0"
+// version is set at build time (-ldflags "-X main.version=…"); see VERSION.
+var version = "dev"
 
 // tx picks the text according to the Windows language (Spanish or English).
 func tx(es, en string) string {

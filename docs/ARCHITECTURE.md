@@ -17,7 +17,7 @@ OmniUpdate is a single Go program with no third-party dependencies.
                     (Microsoft Update Catalog, Dell / Lenovo / HP / ASUS)
 ```
 
-- **UI**: one embedded HTML file opened in an Edge/Chrome app window. A watchdog closes the app when the window closes. The server only accepts requests with the per-run token and a loopback `Host`.
+- **UI**: one embedded HTML file opened in an Edge/Chrome app window. A watchdog closes the app when the window closes. The server only accepts requests with the per-run token, a loopback `Host` and (when the browser sends one) a same-origin `Origin`.
 - **Scan** (`scan.go`): stages with weights drive the progress bar. Branches run in parallel: programs, Windows/Office, inventory → (catalog + manufacturer), and the extras (plugins, GitHub programs, repositories, missing components).
 - **Items** (`model.go`): every finding is an `Item` with a `Kind` (`winget`, `wu`, `catalog`, `oem`, `vendor`, `plugin`, `github`, `repo`, …). `install.go` runs the selected items in a safe order and creates a restore point first when drivers or system updates are involved.
 - **Bilingual text** (`i18n.go`): every user-visible string is stored as `spanish␟english`; the UI picks the language when rendering, so switching is instant.
