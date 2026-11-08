@@ -13,7 +13,7 @@ jobs:
     env:
       HAS_CERT: ${{ secrets.SIGN_PFX_BASE64 != '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # If you published the release yourself with files (e.g. signed on your PC), do not overwrite them.
       - name: Skip if the release already has files
