@@ -28,7 +28,7 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         if: steps.chk.outputs.skip != 'true'
         with: { go-version-file: go.mod, cache: false }
 
