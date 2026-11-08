@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.1
+- Rebuilt with Go 1.26: fixes 25 standard-library vulnerabilities present in the 1.3.0 binaries.
+
 ## 1.3.0
 - **Security**: programs that OmniUpdate only *detected* from an installed program's website (not added by you) are now installed only when the file can be proven genuine: the SHA-256 that GitHub publishes for it, or a valid digital signature. Programs you add yourself behave as before.
 - **Security**: Microsoft Update Catalog driver packages are checked for a broken digital signature (tampering) before installation, and download redirects must stay on Microsoft hosts over HTTPS.
