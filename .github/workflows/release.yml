@@ -66,7 +66,7 @@ jobs:
 
       - name: Provenance attestation (proves these files were built by this workflow)
         if: steps.chk.outputs.skip != 'true'
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: "dist/*.exe"
 
